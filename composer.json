@@ -1,0 +1,7 @@
+{
+    "require": {
+        "altorouter/altorouter": "^1.2",
+        "symfony/var-dumper": "^4.2",
+        "fzaninotto/faker": "^1.8"
+    }
+}
