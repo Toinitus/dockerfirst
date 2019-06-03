@@ -14,15 +14,10 @@ class Router
         $this->router->map('GET', $uri, $file, $name);
         return $this;
     }
-
-
     public function run(): void
     {
         $match = $this->router->match();
-       
         ob_start();
-
-
         if (is_array($match)) {
             $params = $match['params'];
             require $this->pathToFile($match['target']);

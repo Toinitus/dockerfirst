@@ -1,6 +1,7 @@
 {
     "require": {
-        "altorouter/altorouter": "1.2.0"
+        "altorouter/altorouter": "1.2.0",
+        "filp/whoops": "^2.3"
     },
     "require-dev": {
         "fzaninotto/faker": "1.8.0",
