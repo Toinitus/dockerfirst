@@ -61,6 +61,7 @@ $paginatedQuery = new App\PaginatedQuery
 $posts =$paginatedQuery->getItems();
 
 
+
 /**
  * 
  * fin refacto

@@ -16,8 +16,6 @@ class PaginatedQuery
 
     private $pdo;
 
-    private $nbPage;
-
     private $currentpage;
 
     public function __construct(
@@ -37,9 +35,7 @@ class PaginatedQuery
     }
     public function getItems(): ?array
     {
-        $nbpost = $this->pdo->query($this->queryCount)->fetch()[0];
-        $this->nbPage = ceil($nbpost / $this->perpage);
-        if ((int)$_GET["page"] > $this->nbPage) {
+        if ((int)$_GET["page"] > $this->getPage()) {
             throw new Exception('pas de pages');
         }
         if (isset($_GET["page"])) {
@@ -48,21 +44,44 @@ class PaginatedQuery
             $this->currentpage = 1;
         }
         $offset = ($this->currentpage - 1) * $this->perpage;
-        $statement = $this->pdo->query(
-                            $this->query."
+        $statement = $this->pdo->query("
+                            {$this->query}
                             LIMIT {$this->perpage} 
                             OFFSET {$offset}");
         $statement->setFetchMode(\PDO::FETCH_CLASS, $this->classMapping);
         /**@var Post[]|false */
         return $statement->fetchAll();
-    }   
+    }  
+    
+    
     public function getNavHTML(): void 
     {
         $uri = $this->url;
-        for ($i = 1; $i <= $this->nbPage; $i++){
+        for ($i = 1; $i <= $this->getPage(); $i++){
             $class = $this->currentpage == $i ? " active" : "";
             $this->url = $i == 1 ? $uri : $uri . "?page=" . $i; 
            echo '<li class="page-item'.$class.'"><a class="page-link" href="'. $this->url .'">'. $i .'</a></li>';
         }
     }
+
+
+
+     public function getNav():array
+    {
+        $navArray = [];
+        for ($i = 1; $i <= $this->getPage(); $i++){
+            $url = ($i == 1 ? $this->url : $this->url. "?page=" . $i);
+            $navArray[$i] = $url;
+        }
+        return $navArray;
+    }
+
+    public function getPage(): int
+    {
+        $nbpost = $this->pdo->query($this->queryCount)->fetch()[0];
+        $nbPage = ceil($nbpost / $this->perpage);
+        return $nbPage;
+    }
+
+
 }
