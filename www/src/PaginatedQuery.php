@@ -1,87 +1,87 @@
 <?php
 namespace App;
-
-
 class PaginatedQuery
 {
     private $queryCount;
-
     private $query;
-
     private $classMapping;
-
-    private $perpage;
-
     private $url;
-
+    private $perPage;
     private $pdo;
-
-    private $currentpage;
-
+    private $items;
+    private $count;
     public function __construct(
         string $queryCount,
         string $query,
         string $classMapping,
         string $url,
-        int $perpage = 12
-    ){
-        $this->queryCount = $queryCount;
-        $this->query = $query;
+        int    $perPage = 12
+    ) {
+        $this->queryCount   = $queryCount;
+        $this->query        = $query;
         $this->classMapping = $classMapping;
-        $this->url = $url;
-        $this->perpage = $perpage;
-        $this->pdo = Connection::getPDO();
-
+        $this->url          = $url;
+        $this->perPage      = $perPage;
+        $this->pdo          = Connection::getPDO();
     }
-    public function getItems(): ?array
+    public function getItems(): array
     {
-        if ((int)$_GET["page"] > $this->getPage()) {
-            throw new Exception('pas de pages');
+        $nbPage = $this->getNbPages();
+        $currentPage = $this->getCurrentPage();
+        if ($currentPage > $nbPage) {
+            throw new \Exception('pas de pages');
         }
-        if (isset($_GET["page"])) {
-        $this->currentpage = (int)$_GET["page"];
-        } else {
-            $this->currentpage = 1;
+        if ($this->items === null) {
+            $offset = ($currentPage - 1) * $this->perPage;
+            $statement = $this->pdo->query("{$this->query} LIMIT {$this->perPage}  OFFSET {$offset}");
+            $statement->setFetchMode(\PDO::FETCH_CLASS, $this->classMapping);
+            $this->items = $statement->fetchAll();
         }
-        $offset = ($this->currentpage - 1) * $this->perpage;
-        $statement = $this->pdo->query("
-                            {$this->query}
-                            LIMIT {$this->perpage} 
-                            OFFSET {$offset}");
-        $statement->setFetchMode(\PDO::FETCH_CLASS, $this->classMapping);
-        /**@var Post[]|false */
-        return $statement->fetchAll();
-    }  
-    
-    
-    public function getNavHTML(): void 
+        return $this->items;
+    }
+    public function getNav(): array
     {
         $uri = $this->url;
-        for ($i = 1; $i <= $this->getPage(); $i++){
-            $class = $this->currentpage == $i ? " active" : "";
-            $this->url = $i == 1 ? $uri : $uri . "?page=" . $i; 
-           echo '<li class="page-item'.$class.'"><a class="page-link" href="'. $this->url .'">'. $i .'</a></li>';
-        }
-    }
-
-
-
-     public function getNav():array
-    {
+        $nbPage = $this->getNbPages();
         $navArray = [];
-        for ($i = 1; $i <= $this->getPage(); $i++){
-            $url = ($i == 1 ? $this->url : $this->url. "?page=" . $i);
+        for ($i = 1; $i <= $nbPage; $i++) {
+            // if($i == 1){
+            //     $url = $uri;
+            // }else{
+            //     $url = $uri . "?page=" . $i;
+            // }
+            $url = $i == 1 ? $uri : $uri . "?page=" . $i;
             $navArray[$i] = $url;
         }
         return $navArray;
     }
-
-    public function getPage(): int
+    public function getNavHtml(): string
     {
-        $nbpost = $this->pdo->query($this->queryCount)->fetch()[0];
-        $nbPage = ceil($nbpost / $this->perpage);
-        return $nbPage;
+        $urls = $this->getNav();
+        $html = "";
+        foreach ($urls as $key => $url) {
+            $class = $this->getCurrentPage() == $key ? " active" : "";
+            $html .= "<li class=\"page-item {$class}\"><a class=\"page-link\" href=\"{$url}\">{$key}</a></li>";
+        }
+        return <<<HTML
+        <nav class="Page navigation">
+            <ul class="pagination justify-content-center">
+                {$html}
+            </ul>
+        </nav>
+HTML;
     }
-
-
+    private function getCurrentPage(): int
+    {
+        return URL::getPositiveInt('page', 1);
+    }
+    private function getNbPages(): float
+    {
+        if ($this->count === null) {
+            $this->count = $this->pdo
+                ->query($this->queryCount)
+                ->fetch()[0];
+        }
+        return ceil($this->count / $this->perPage);
+    }
 }

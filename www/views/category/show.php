@@ -28,27 +28,9 @@ if ($category->getSlug() !== $slug) {
     exit();
 }
 $title = 'categorie : ' . $category->getName();
-/**
- *      $paginatedQuery = new App\PaginatedQuery(queryCount, query, class, url,perpage = 12)
- *      $post = $paginatedQuery->getItems()
- *      
- *      *** special ***
- *      querycount
- *      query
- *      class
- * 
- *      *** comun *** 
- *      perpage
- * 
- * 
- */
-
 $uri = $router->url("category", ["id" => $category->getId(), "slug" => $category->getSlug()]);
-
-$paginatedQuery = new App\PaginatedQuery
-(
+$paginatedQuery = new App\PaginatedQuery(
     "SELECT count(category_id) FROM post_category WHERE category_id = {$category->getId()}",
-
     "SELECT p.*
     FROM post p
     JOIN post_category pc ON pc.post_id = p.id
@@ -56,16 +38,8 @@ $paginatedQuery = new App\PaginatedQuery
     ORDER BY created_at DESC",
     Post::class,
     $uri
-
 );
-$posts =$paginatedQuery->getItems();
-
-
-
-/**
- * 
- * fin refacto
- */
+$posts = $paginatedQuery->getItems();
 ?>
 
 
@@ -78,20 +52,4 @@ $posts =$paginatedQuery->getItems();
 </section>
 
 <?php
-/**
- * 
- * 
- * $paginatedQuery->getNavHTML();  ----> html
- * 
- * $paginatedQuery->getNav();   ->>   [1=>url, 2=>url]
- * 
- */
-?>
-<nav class="Page navigation">
-    <ul class="pagination justify-content-center">
-
-        <?php
-            $paginatedQuery->getNavHTML();
-        ?>    
-    </ul>
-</nav>
+echo $paginatedQuery->getNavHtml();
