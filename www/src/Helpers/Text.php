@@ -4,10 +4,18 @@ class Text
 {
     public static function excerpt(string $content, int $limit = 100): string
     {
-        if (mb_strlen($content) <= $limit) {
-            return $content;
+        $text = strip_tags($content);
+
+        if (mb_strlen($text) <= $limit) 
+        {
+            return $text;
         }
-        $lastSpace = mb_strpos($content, ' ', $limit);
-        return mb_substr($content, 0, $lastSpace) . '...';
+        $lastSpace = mb_strpos($text, ' ', $limit -1);
+        if ($lastSpace == NULL){
+            return mb_substr($text, 0, $limit) . '...';
+        }
+        return mb_substr($text, 0, $lastSpace) . '...';
+        
     }
+
 }
